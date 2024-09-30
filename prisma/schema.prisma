@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  idx       Int       @id @default(autoincrement())
+  nickname  String    @unique @db.VarChar(50)
+  password  String    @db.VarChar(100)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  email     String    @unique @db.VarChar(100)
+  boards    KanbanBoard[]
+}
+
+model KanbanBoard {
+  idx       Int      @id @default(autoincrement())
+  name      String
+  userIdx   Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  tasks     Task[]
+  user      User      @relation(fields: [userIdx], references: [idx])
+}
+
+model Task {
+  idx       Int       @id @default(autoincrement())
+  contents      String
+  status    Status
+  board     KanbanBoard @relation(fields: [boardIdx], references: [idx])
+  boardIdx  Int
+  tag String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+}
+
+enum Status {
+  TODO
+  INPROGRESS
+  PENDING
+  DONE
+  CANCEL
+}
