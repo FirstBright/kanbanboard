@@ -1,7 +1,22 @@
 import Button from "@/components/ui/Button"
 import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
+import { useState, useEffect } from "react"
 
 export default function Home() {
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["me"],
+        queryFn: async () => await axios.get("/api/me"),
+    })
+
+    const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+    useEffect(() => {
+        if (!isLoading && !isError && data?.data?.status !== "fail") {
+            setIsAuthenticated(true)
+        }
+    }, [data, isLoading, isError])
     return (
         <>
             <div className='flex h-full items-center relative justify-center pt-[82px] gap-20 w-[90%] mx-auto max-w-[1450px]'>
@@ -20,8 +35,12 @@ export default function Home() {
                                 칸반보드를 이용한 Todo List
                             </p>
                         </div>
-                        <Link href={"/login"}>
-                            <Button text='시작하기'></Button>
+                        <Link href={isAuthenticated ? "/boardPage" : "/login"}>
+                            <Button
+                                text={
+                                    isAuthenticated ? "보드로 가기" : "시작하기"
+                                }
+                            />
                         </Link>
                     </div>
                 </div>

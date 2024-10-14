@@ -1,8 +1,37 @@
 import Link from "next/link"
-import { useState } from "react"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import axios from "axios"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/router"
 
 const Navbar = () => {
+    const router = useRouter()
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["me"],
+        queryFn: async () => await axios.get("/api/me"),
+    })
+
     const [isSignedIn, setSignIn] = useState(false)
+
+    useEffect(() => {
+        if (!isLoading && !isError && data?.data?.status !== "fail") {
+            setSignIn(true)
+        } else {
+            setSignIn(false)
+        }
+    }, [data, isLoading, isError])
+
+    const logoutMutation = useMutation({
+        mutationFn: async () => await axios.post("/api/logout"),
+        onSuccess: () => {
+            window.location.reload() // Reload the page to reflect the logout
+        },
+    })
+
+    const handleLogout = () => {
+        logoutMutation.mutate()
+    }
+
     return (
         <div className='py-5 transparent relative z-10 w-full'>
             <div className='flex justify-between w-[90%] max-w-[1450px] mx-auto text-white'>
@@ -13,7 +42,17 @@ const Navbar = () => {
                     <h1>Lila</h1>
                 </Link>
 
-                {!isSignedIn && (
+                {isSignedIn ? (
+                    <div className='flex gap-4 items-center'>
+                        <strong>{data?.data?.nickname}</strong>
+                        <button
+                            onClick={handleLogout}
+                            className='tracking-tight hover:underline'
+                        >
+                            로그아웃
+                        </button>
+                    </div>
+                ) : (
                     <Link
                         href={"/login"}
                         className='tracking-tight hover:underline'

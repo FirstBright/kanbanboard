@@ -30,16 +30,16 @@ model KanbanBoard {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
   tasks     Task[]
-  user      User      @relation(fields: [userIdx], references: [idx])
+  user      User      @relation(fields: [userIdx], references: [idx], onDelete: Cascade)
 }
 
 model Task {
   idx       Int       @id @default(autoincrement())
-  contents      String
+  contents  String
   status    Status
-  board     KanbanBoard @relation(fields: [boardIdx], references: [idx])
+  board     KanbanBoard @relation(fields: [boardIdx], references: [idx], onDelete: Cascade)
   boardIdx  Int
-  tag String
+  tag       String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
 }
