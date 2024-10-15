@@ -37,6 +37,7 @@ model Task {
   idx       Int       @id @default(autoincrement())
   contents  String
   status    Status
+  location  Int      @default(0)
   board     KanbanBoard @relation(fields: [boardIdx], references: [idx], onDelete: Cascade)
   boardIdx  Int
   tag       String?

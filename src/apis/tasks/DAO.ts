@@ -43,7 +43,7 @@ export async function updateTask(
     res: NextApiResponse,
     taskIdx: number
 ) {
-    const { contents, status, tag } = req.body
+    const { contents, status } = req.body
 
     try {
         const updatedTask = await prisma.task.update({
@@ -51,7 +51,6 @@ export async function updateTask(
             data: {
                 contents,
                 status,
-                tag,
             },
         })
 

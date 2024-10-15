@@ -5,7 +5,7 @@ import { updateTask, deleteTask, getTask } from "@/apis/tasks/DAO"
 const handler = async (req: NextApiRequest, res: NextApiResponse) => {
     const { taskIdx } = req.query
     const idxStr = Array.isArray(taskIdx) ? taskIdx[0] : taskIdx
-
+    console.log(req, res, idxStr)
     // Validate the taskIdx query parameter
     if (
         !idxStr ||
@@ -40,12 +40,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) => {
                 return res.status(200).json(task)
 
             case "PUT":
-                await updateTask(req, res, taskIdxNumber)
-                return res
-                    .status(200)
-                    .json({ message: "Task가 업데이트되었습니다." })
+                const updatedTask = await updateTask(req, res, taskIdxNumber)
+                return res.status(200).json(updatedTask)
 
             case "DELETE":
+                console.log(req, res, taskIdxNumber)
                 await deleteTask(req, res, taskIdxNumber)
                 return res
                     .status(200)
