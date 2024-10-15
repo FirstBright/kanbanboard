@@ -1,6 +1,6 @@
-import { PrismaClient } from "@prisma/client"
-import { hash } from "bcrypt"
-import { NextApiRequest, NextApiResponse } from "next"
+import { PrismaClient } from '@prisma/client'
+import { hash } from 'bcrypt'
+import { NextApiRequest, NextApiResponse } from 'next'
 
 const prisma = new PrismaClient()
 
@@ -13,10 +13,22 @@ export const createUser = async (req: NextApiRequest, res: NextApiResponse) => {
     ) {
         return res
             .status(400)
-            .json({ message: "Please Check name, password, email" })
+            .json({ message: 'Please Check name, password, email' })
     }
+
+    const users = await prisma.user.findMany({
+        where: {
+            OR: [{ nickname }, { email }],
+        },
+    })
+    if (users.length >= 1) {
+        return res
+            .status(400)
+            .json({ message: '이메일이나 닉네임이 중복입니다.' })
+    }
+
     const hashPassword = await hash(password, 10)
-    const user = await prisma.user.create({
+    const result = await prisma.user.create({
         data: {
             nickname,
             password: hashPassword,
@@ -26,6 +38,6 @@ export const createUser = async (req: NextApiRequest, res: NextApiResponse) => {
 
     res.status(200).json({
         status: 200,
-        message: `${user.nickname} signup success`,
+        message: `${result.nickname} signup success`,
     })
 }
