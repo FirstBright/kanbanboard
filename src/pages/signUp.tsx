@@ -1,18 +1,22 @@
-import { useMutation } from "@tanstack/react-query"
-import axios from "axios"
-import { useRouter } from "next/router"
+import { useMutation } from '@tanstack/react-query'
+import axios from 'axios'
+import { useRouter } from 'next/router'
+import toast from 'react-hot-toast'
 
 export default function SignUp() {
     const router = useRouter()
     const signUpMutation = useMutation({
         mutationFn: async ({ nickname, email, password }: any) =>
-            await axios.post("/api/signUp", {
+            await axios.post('/api/signUp', {
                 nickname,
                 email,
                 password,
             }),
         onSuccess: () => {
-            router.push("/login")
+            router.push('/login')
+        },
+        onError: (error: any) => {
+            toast.error(error.response.data.message)
         },
     })
 
