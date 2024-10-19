@@ -43,7 +43,7 @@ export async function updateTask(
     res: NextApiResponse,
     taskIdx: number
 ) {
-    const { contents, status } = req.body
+    const { contents, status, location } = req.body
 
     try {
         const updatedTask = await prisma.task.update({
@@ -51,15 +51,17 @@ export async function updateTask(
             data: {
                 contents,
                 status,
+                location,
             },
         })
 
-        res.status(201).json(updatedTask)
+        res.status(200).json(updatedTask)
     } catch (error) {
         console.error("Error updating task:", error)
         res.status(500).json({ message: "Error updating task" })
     }
 }
+
 export async function deleteTask(
     req: NextApiRequest,
     res: NextApiResponse,
@@ -70,7 +72,7 @@ export async function deleteTask(
             where: { idx: taskIdx },
         })
 
-        res.status(201).json(deletedTask)
+        res.status(200).json(deletedTask)
     } catch (error) {
         console.error("Error deleting task:", error)
         res.status(500).json({ message: "Error deleting task" })
@@ -87,8 +89,11 @@ export async function getTask(
             where: { idx: taskIdx },
         })
 
-        res.status(201).json(gotTask)
-        return gotTask
+        if (!gotTask) {
+            return res.status(404).json({ message: "Task not found" })
+        }
+
+        res.status(200).json(gotTask)
     } catch (error) {
         console.error("Error getting task:", error)
         res.status(500).json({ message: "Error getting task" })
@@ -101,14 +106,14 @@ export async function getTasks(
     boardIdx: number
 ) {
     try {
-        const gotTask = await prisma.task.findMany({
+        const tasks = await prisma.task.findMany({
             where: { boardIdx: boardIdx },
+            orderBy: { location: 'asc' },
         })
 
-        res.status(201).json(gotTask)
-        return gotTask
+        res.status(200).json(tasks)
     } catch (error) {
-        console.error("Error getting task:", error)
-        res.status(500).json({ message: "Error getting task" })
+        console.error("Error getting tasks:", error)
+        res.status(500).json({ message: "Error getting tasks" })
     }
 }

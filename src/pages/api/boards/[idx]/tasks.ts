@@ -16,23 +16,19 @@ export default async function handler(
         }
 
         try {
-            // Verify token here
-            // verify(token, process.env.JWT_SECRET)
+            verify(token, process.env.JWT_SECRET)
 
-            const { boardIdx } = req.query
-            if (typeof boardIdx !== "string") {
-                return res.status(410).json({ message: "Invalid boardIdx" })
+            const { idx } = req.query
+            const boardIdx = parseInt(idx as string, 10)
+
+            if (isNaN(boardIdx)) {
+                return res.status(400).json({ message: "Invalid boardIdx" })
             }
 
-            const boardIdxNumber = parseInt(boardIdx, 10)
-            if (isNaN(boardIdxNumber)) {
-                return res.status(420).json({ message: "Invalid boardIdx" })
-            }
-
-            if (req.method === "GET") {
-                await getTasks(req, res, boardIdxNumber)
-            } else if (req.method === "POST") {
-                await addTask(req, res, boardIdxNumber)
+            if (req.method === "POST") {
+                await addTask(req, res, boardIdx)
+            } else if (req.method === "GET") {
+                await getTasks(req, res, boardIdx)
             } else {
                 res.status(405).json({ message: "Method not allowed" })
             }

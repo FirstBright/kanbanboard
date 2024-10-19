@@ -8,6 +8,7 @@ import { SyncLoader } from "react-spinners"
 import { parseCookies } from "nookies"
 import axios from "axios"
 import { verify } from "jsonwebtoken"
+import Link from "next/link"
 
 interface Board {
     idx: number
@@ -42,10 +43,12 @@ const BoardPage = ({
             })
 
             toast.success(`Board "${boardName}" created!`)
+            const newBoard = response.data
             setBoardList([...boardList, response.data])
-            router.replace(`/boards/${response.data.idx}`)
+            router.push(`/myKanbanBoard?boardIdx=${newBoard.idx}`)
         } catch (error) {
             toast.error("Error creating board")
+            console.error("Error creating board:", error)
         } finally {
             setLoading(false)
         }
@@ -67,6 +70,7 @@ const BoardPage = ({
             }
         } catch (error) {
             toast.error("Error deleting board")
+            console.error("Error deleting board:", error)
         } finally {
             setLoading(false)
         }
@@ -75,9 +79,6 @@ const BoardPage = ({
     const handleCreateNewBoard = () => {
         setCreatingBoard(true) // Simulate that we are in board creation mode
         setBoardName("") // Reset the board name input
-    }
-    const handleCancelCreateBoard = () => {
-        setCreatingBoard(false) // Allow user to go back to the board list view
     }
 
     return (
@@ -120,28 +121,28 @@ const BoardPage = ({
             ) : (
                 <div className='w-full'>
                     <h1 className='text-4xl font-bold mb-8'>Your Boards</h1>
-                    <ul>
+                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                         {boardList.map((board) => (
-                            <li
+                            <div
                                 key={board.idx}
-                                className='flex justify-between items-center'
+                                className='bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center'
                             >
-                                <a
-                                    href={`/boards/${board.idx}`}
-                                    className='text-xl'
+                                <Link
+                                    href={`/myKanbanBoard?boardIdx=${board.idx}`}
                                 >
                                     {board.name}
-                                </a>
+                                </Link>
+
                                 <button
-                                    className='text-red-500 ml-4'
                                     onClick={() => handleDeleteBoard(board.idx)}
+                                    className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300'
                                     disabled={loading}
                                 >
-                                    Delete
+                                    X
                                 </button>
-                            </li>
+                            </div>
                         ))}
-                    </ul>
+                    </div>
                     <div className='flex flex-col gap-10 mt-40 items-center'>
                         <Button
                             text='Create New Board'

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react"
+import { useRouter } from "next/router"
 import {
     DragDropContext,
     Droppable,
@@ -6,57 +7,120 @@ import {
     DropResult,
 } from "react-beautiful-dnd"
 import axios from "axios"
+import { motion, AnimatePresence } from "framer-motion"
 
+type TaskStatus = "TODO" | "INPROGRESS" | "PENDING" | "DONE" | "CANCEL"
 // Define the Task type
 type Task = {
     idx: number
     contents: string
     draggableIdx: string
-    status: "TODO" | "INPROGRESS" | "PENDING" | "DONE" | "CANCEL"
+    status: TaskStatus
     location: number
+}
+type Board = {
+    idx: number
+    name: string
 }
 
 interface MyKanbanBoardProps {
     boardIdx: number
 }
-const MyKanbanBoard: React.FC<MyKanbanBoardProps> = ({ boardIdx }) => {
-    const [tasks, setTasks] = useState<{ [key: string]: Task[] }>({
+interface ModalProps {
+    isOpen: boolean
+    onClose: () => void
+    children: React.ReactNode
+}
+
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+    if (!isOpen) return null
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 text-black'
+                onClick={onClose}
+            >
+                <motion.div
+                    initial={{ y: -50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: -50, opacity: 0 }}
+                    className='bg-white rounded-lg p-6 w-96'
+                    onClick={(e) => e.stopPropagation()}
+                >
+                    {children}
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    )
+}
+
+const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
+    const [tasks, setTasks] = useState<Record<TaskStatus, Task[]>>({
         TODO: [],
         INPROGRESS: [],
         PENDING: [],
         DONE: [],
         CANCEL: [],
     })
+    const router = useRouter()
+    const { boardIdx } = router.query
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+    const [currentTask, setCurrentTask] = useState<Task | null>(null)
+    const [editedContents, setEditedContents] = useState("")
+    const [board, setBoard] = useState<Board | null>(null)
     useEffect(() => {
-        fetchTasks()
+        if (boardIdx) {
+            fetchTasks(Number(boardIdx))
+        }
     }, [boardIdx])
 
-    const fetchTasks = async () => {
-        try {
-            const response = await axios.get(`/api/tasks?boardIdx=${boardIdx}`)
-            const fetchedTasks = response.data
+    const openEditModal = (task: Task) => {
+        setCurrentTask(task)
+        setEditedContents(task.contents)
+        setIsEditModalOpen(true)
+    }
 
-            const tasksByStatus = {
-                TODO: fetchedTasks.filter(
-                    (task: Task) => task.status === "TODO"
-                ),
-                INPROGRESS: fetchedTasks.filter(
-                    (task: Task) => task.status === "INPROGRESS"
-                ),
-                PENDING: fetchedTasks.filter(
-                    (task: Task) => task.status === "PENDING"
-                ),
-                DONE: fetchedTasks.filter(
-                    (task: Task) => task.status === "DONE"
-                ),
-                CANCEL: fetchedTasks.filter(
-                    (task: Task) => task.status === "CANCEL"
-                ),
+    const openDeleteModal = (task: Task) => {
+        setCurrentTask(task)
+        setIsDeleteModalOpen(true)
+    }
+
+    const handleEditTask = async () => {
+        if (currentTask) {
+            await editTask(currentTask.idx, editedContents, currentTask.status)
+            setIsEditModalOpen(false)
+        }
+    }
+
+    const handleDeleteTask = async () => {
+        if (currentTask) {
+            await deleteTask(currentTask.idx, currentTask.status)
+            setIsDeleteModalOpen(false)
+        }
+    }
+
+    const fetchTasks = async (boardIdx: number) => {
+        try {
+            const response = await axios.get(`/api/boards/${boardIdx}`)
+            const fetchedBoard = response.data
+            setBoard(fetchedBoard)
+            const fetchedTasks = fetchedBoard.tasks
+
+            const tasksByStatus: Record<TaskStatus, Task[]> = {
+                TODO: [],
+                INPROGRESS: [],
+                PENDING: [],
+                DONE: [],
+                CANCEL: [],
             }
 
-            // Sort tasks by location within each status
-            Object.keys(tasksByStatus).forEach((status) => {
-                tasksByStatus[status].sort((a, b) => a.location - b.location)
+            fetchedTasks.forEach((task: Task) => {
+                tasksByStatus[task.status].push(task)
             })
 
             setTasks(tasksByStatus)
@@ -69,70 +133,41 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = ({ boardIdx }) => {
 
         if (!destination) return
 
-        const sourceList = tasks[source.droppableId as keyof typeof tasks]
-        const destList = tasks[destination.droppableId as keyof typeof tasks]
+        const sourceStatus = source.droppableId as TaskStatus
+        const destStatus = destination.droppableId as TaskStatus
 
-        if (destination.droppableId === source.droppableId) {
-            const [movedTask] = sourceList.splice(source.index, 1)
-            sourceList.splice(destination.index, 0, movedTask)
+        const newTasks = { ...tasks }
+        const [movedTask] = newTasks[sourceStatus].splice(source.index, 1)
+        movedTask.status = destStatus
+        newTasks[destStatus].splice(destination.index, 0, movedTask)
 
-            const updatedList = sourceList.map((task, index) => ({
+        setTasks(newTasks)
+
+        try {
+            await axios.put(`/api/tasks/${movedTask.idx}`, {
+                status: destStatus,
+                location: destination.index,
+            })
+
+            // Update locations for all tasks in the destination list
+            const updatedDestList = newTasks[destStatus].map((task, index) => ({
                 ...task,
                 location: index,
             }))
 
-            setTasks({
-                ...tasks,
-                [source.droppableId]: updatedList,
-            })
-
-            try {
-                // Update all tasks in the same list with new locations
-                for (const task of updatedList) {
-                    await axios.put(`/api/tasks/${task.idx}`, {
-                        location: task.location,
-                    })
-                }
-            } catch (error) {
-                console.error("Error updating task locations:", error)
-                fetchTasks() // Revert to original state if the API call fails
-            }
-        } else {
-            // Moving between different lists
-            const [movedTask] = sourceList.splice(source.index, 1)
-            movedTask.status = destination.droppableId as keyof typeof tasks
-            destList.splice(destination.index, 0, movedTask)
-
-            const updatedDestList = destList.map((task, index) => ({
-                ...task,
-                location: index,
-            }))
-
-            setTasks({
-                ...tasks,
-                [source.droppableId]: sourceList,
-                [destination.droppableId]: destList,
-            })
-
-            try {
-                await axios.put(`/api/tasks/${movedTask.idx}`, {
-                    status: movedTask.status,
-                    location: destination.index,
+            for (const task of updatedDestList) {
+                await axios.put(`/api/tasks/${task.idx}`, {
+                    location: task.location,
                 })
-                for (const task of updatedDestList) {
-                    await axios.put(`/api/tasks/${task.idx}`, {
-                        location: task.location,
-                    })
-                }
-            } catch (error) {
-                console.error("Error updating task status:", error)
-                fetchTasks() // Revert state if the API call fails
             }
+        } catch (error) {
+            console.error("Error updating task:", error)
+            fetchTasks(Number(boardIdx)) // Revert to original state if the API call fails
         }
     }
     const moveTask = async (
         taskIdx: number,
-        status: string,
+        status: TaskStatus,
         direction: "up" | "down"
     ) => {
         const statusTasks = tasks[status]
@@ -170,41 +205,33 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = ({ boardIdx }) => {
             }
         } catch (error) {
             console.error("Error updating task locations:", error)
-            fetchTasks() // Refetch tasks to ensure frontend state matches backend
+            fetchTasks(Number(boardIdx)) // Refetch tasks to ensure frontend state matches backend
         }
     }
 
     const addTask = async () => {
-        const numBoardIdx = Number(boardIdx)
-
-        if (isNaN(numBoardIdx)) {
-            console.error("Invalid board index:", boardIdx)
-            return
-        }
         try {
             const newTask = {
                 contents: "New Task",
-                status: "TODO",
+                status: "TODO" as TaskStatus,
+                boardIdx: boardIdx,
             }
             const response = await axios.post(
-                `/api/tasks?boardIdx=${boardIdx}`,
+                `/api/boards/${boardIdx}/tasks`,
                 newTask
             )
             const createdTask = response.data
 
-            setTasks({
-                ...tasks,
-                TODO: [...tasks.TODO, createdTask],
-            })
+            setTasks((prevTasks) => ({
+                ...prevTasks,
+                TODO: [...prevTasks.TODO, createdTask],
+            }))
         } catch (error) {
             console.error("Error adding task:", error)
         }
     }
 
-    const deleteTask = async (
-        taskIdx: number,
-        status: "TODO" | "INPROGRESS" | "DONE" | "CANCEL" | "PENDING"
-    ) => {
+    const deleteTask = async (taskIdx: number, status: TaskStatus) => {
         try {
             await axios.delete(`/api/tasks/${taskIdx}`)
 
@@ -222,7 +249,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = ({ boardIdx }) => {
     const editTask = async (
         taskIdx: number,
         newContents: string,
-        status: "TODO" | "INPROGRESS" | "DONE" | "CANCEL" | "PENDING"
+        status: TaskStatus
     ) => {
         try {
             const updatedTask = {
@@ -248,125 +275,133 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = ({ boardIdx }) => {
             console.error("Error updating task:", error)
         }
     }
-
     return (
-        <DragDropContext onDragEnd={onDragEnd}>
-            <div className='flex space-x-4'>
-                {Object.keys(tasks).map((status) => (
-                    <Droppable droppableId={status} key={status}>
-                        {(provided) => (
-                            <div
-                                {...provided.droppableProps}
-                                ref={provided.innerRef}
-                                className='w-1/3 p-4 bg-gray-100 rounded-lg text-black'
-                            >
-                                <h2 className='font-bold text-lg mb-4'>
-                                    {status}
-                                </h2>
-                                {tasks[status].map(
-                                    (task: Task, index: number) => (
-                                        <Draggable
-                                            key={task.idx}
-                                            draggableId={task.draggableIdx}
-                                            index={index}
-                                        >
-                                            {(provided) => (
-                                                <div
-                                                    {...provided.draggableProps}
-                                                    {...provided.dragHandleProps}
-                                                    ref={provided.innerRef}
-                                                    className='p-4 mb-3 bg-white rounded-lg shadow-lg'
-                                                >
-                                                    <div className='flex justify-between items-center'>
-                                                        <span>
-                                                            {task.contents}
-                                                        </span>
-                                                        <div>
-                                                            <button
-                                                                onClick={() =>
-                                                                    moveTask(
-                                                                        task.idx,
-                                                                        status,
-                                                                        "up"
-                                                                    )
-                                                                }
-                                                                className='mr-2 text-gray-500 hover:text-gray-700'
-                                                                disabled={
-                                                                    index === 0
-                                                                }
-                                                            >
-                                                                ↑
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    moveTask(
-                                                                        task.idx,
-                                                                        status,
-                                                                        "down"
-                                                                    )
-                                                                }
-                                                                className='mr-2 text-gray-500 hover:text-gray-700'
-                                                                disabled={
-                                                                    index ===
-                                                                    tasks[
-                                                                        status
-                                                                    ].length -
-                                                                        1
-                                                                }
-                                                            >
-                                                                ↓
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    editTask(
-                                                                        task.idx,
-                                                                        prompt(
-                                                                            "Edit task:",
-                                                                            task.contents
-                                                                        ) ||
-                                                                            task.contents,
-                                                                        status as
-                                                                            | "TODO"
-                                                                            | "INPROGRESS"
-                                                                            | "DONE"
-                                                                            | "PENDING"
-                                                                            | "CANCEL"
-                                                                    )
-                                                                }
-                                                                className='mr-2 text-blue-500 hover:text-blue-700'
-                                                            >
-                                                                Edit
-                                                            </button>
-                                                            <button
-                                                                onClick={() =>
-                                                                    deleteTask(
-                                                                        task.idx,
-                                                                        status as
-                                                                            | "TODO"
-                                                                            | "INPROGRESS"
-                                                                            | "DONE"
-                                                                            | "PENDING"
-                                                                            | "CANCEL"
-                                                                    )
-                                                                }
-                                                                className='text-red-500 hover:text-red-700'
-                                                            >
-                                                                Delete
-                                                            </button>
+        <div className='container mx-auto px-4 py-8'>
+            <h1 className='text-2xl font-bold mb-4'>
+                {board ? board.name : "Loading..."}
+            </h1>
+            <button
+                onClick={addTask}
+                className='mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+            >
+                Add Task
+            </button>
+            <DragDropContext onDragEnd={onDragEnd}>
+                <div className='flex space-x-4'>
+                    {(Object.keys(tasks) as TaskStatus[]).map((status) => (
+                        <Droppable droppableId={status} key={status}>
+                            {(provided) => (
+                                <div
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                    className='w-1/5 p-4 bg-gray-100 rounded-lg text-black'
+                                >
+                                    <h2 className='font-bold text-lg mb-4'>
+                                        {status}
+                                    </h2>
+                                    {tasks[status].map(
+                                        (task: Task, index: number) => (
+                                            <Draggable
+                                                key={task.idx}
+                                                draggableId={task.idx.toString()}
+                                                index={index}
+                                            >
+                                                {(provided) => (
+                                                    <div
+                                                        {...provided.draggableProps}
+                                                        {...provided.dragHandleProps}
+                                                        ref={provided.innerRef}
+                                                        className='p-4 mb-3 bg-white rounded-lg shadow-lg'
+                                                    >
+                                                        <div className='flex justify-between items-center'>
+                                                            <span>
+                                                                {task.contents}
+                                                            </span>
+                                                            <div>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        openEditModal(
+                                                                            task
+                                                                        )
+                                                                    }
+                                                                    className='mr-2 text-blue-500 hover:text-blue-700'
+                                                                >
+                                                                    Edit
+                                                                </button>
+                                                                <button
+                                                                    onClick={() =>
+                                                                        openDeleteModal(
+                                                                            task
+                                                                        )
+                                                                    }
+                                                                    className='text-red-500 hover:text-red-700'
+                                                                >
+                                                                    Delete
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </Draggable>
-                                    )
-                                )}
-                                {provided.placeholder}
-                            </div>
-                        )}
-                    </Droppable>
-                ))}
-            </div>
-        </DragDropContext>
+                                                )}
+                                            </Draggable>
+                                        )
+                                    )}
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    ))}
+                </div>
+            </DragDropContext>
+
+            <Modal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+            >
+                <h2 className='text-2xl font-bold mb-4'>Edit Task</h2>
+                <input
+                    type='text'
+                    value={editedContents}
+                    onChange={(e) => setEditedContents(e.target.value)}
+                    className='w-full p-2 mb-4 border rounded'
+                />
+                <div className='flex justify-end'>
+                    <button
+                        onClick={() => setIsEditModalOpen(false)}
+                        className='mr-2 px-4 py-2 bg-gray-300 rounded'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleEditTask}
+                        className='px-4 py-2 bg-blue-500 text-white rounded'
+                    >
+                        Save
+                    </button>
+                </div>
+            </Modal>
+
+            <Modal
+                isOpen={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+            >
+                <h2 className='text-2xl font-bold mb-4'>Delete Task</h2>
+                <p>Are you sure you want to delete this task?</p>
+                <div className='flex justify-end mt-4'>
+                    <button
+                        onClick={() => setIsDeleteModalOpen(false)}
+                        className='mr-2 px-4 py-2 bg-gray-300 rounded'
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        onClick={handleDeleteTask}
+                        className='px-4 py-2 bg-red-500 text-white rounded'
+                    >
+                        Delete
+                    </button>
+                </div>
+            </Modal>
+        </div>
     )
 }
 

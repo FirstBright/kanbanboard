@@ -1,67 +1,47 @@
 import { NextApiRequest, NextApiResponse } from "next"
 import { parseCookies } from "nookies"
+import { verify } from "jsonwebtoken"
 import { updateTask, deleteTask, getTask } from "@/apis/tasks/DAO"
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) => {
-    const { taskIdx } = req.query
-    const idxStr = Array.isArray(taskIdx) ? taskIdx[0] : taskIdx
-    console.log(req, res, idxStr)
-    // Validate the taskIdx query parameter
-    if (
-        !idxStr ||
-        isNaN(parseInt(idxStr, 10)) ||
-        parseInt(idxStr, 10).toString() !== idxStr
-    ) {
-        return res.status(400).json({ message: "유효하지 않은 idx입니다." })
-    }
-
-    const taskIdxNumber = parseInt(idxStr, 10)
-
+export default async function handler(
+    req: NextApiRequest,
+    res: NextApiResponse
+) {
     try {
-        // Parse cookies to check for the token
         const cookies = parseCookies({ req })
         const token = cookies["token"]
 
         if (!token) {
+            return res.status(401).json({ message: "Token not provided" })
+        }
+
+        try {
+            verify(token, process.env.JWT_SECRET)
+
+            const { idx } = req.query
+            const taskIdx = parseInt(idx as string, 10)
+
+            if (isNaN(taskIdx)) {
+                return res.status(400).json({ message: "Invalid taskIdx" })
+            }
+
+            if (req.method === "PUT") {
+                await updateTask(req, res, taskIdx)
+            } else if (req.method === "DELETE") {
+                await deleteTask(req, res, taskIdx)
+            } else if (req.method === "GET") {
+                await getTask(req, res, taskIdx)
+            } else {
+                res.status(405).json({ message: "Method not allowed" })
+            }
+        } catch (error) {
+            console.error("Error in API handler:", error)
             return res
                 .status(401)
-                .json({ message: "토큰이 제공되지 않았습니다." })
-        }
-
-        // Perform the task operation based on the request method
-        switch (req.method) {
-            case "GET":
-                const task = await getTask(req, res, taskIdxNumber)
-                if (!task) {
-                    return res
-                        .status(404)
-                        .json({ message: "Task를 찾을 수 없습니다." })
-                }
-                return res.status(200).json(task)
-
-            case "PUT":
-                const updatedTask = await updateTask(req, res, taskIdxNumber)
-                return res.status(200).json(updatedTask)
-
-            case "DELETE":
-                console.log(req, res, taskIdxNumber)
-                await deleteTask(req, res, taskIdxNumber)
-                return res
-                    .status(200)
-                    .json({ message: "Task가 삭제되었습니다." })
-
-            default:
-                return res
-                    .status(405)
-                    .json({ message: "지원하지 않는 메서드입니다." })
+                .json({ status: "fail", message: "Invalid token" })
         }
     } catch (error) {
-        // Return detailed error information for debugging
-        console.error("API 처리 중 오류 발생:", error)
-        return res.status(500).json({
-            message: "서버 오류가 발생했습니다.",
-        })
+        console.error("API processing error:", error)
+        res.status(500).json({ message: "Server error occurred" })
     }
 }
-
-export default handler

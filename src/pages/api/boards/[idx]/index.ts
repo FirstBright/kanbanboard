@@ -1,15 +1,7 @@
-import { verify } from "jsonwebtoken"
 import { NextApiRequest, NextApiResponse } from "next"
 import { parseCookies } from "nookies"
-import { PrismaClient } from "@prisma/client"
-import { JwtPayload } from "jsonwebtoken"
 import { deletePost } from "@/apis/boards/deleteBoard"
-
-interface IJwtPayload extends JwtPayload {
-    idx: number
-}
-
-const prisma = new PrismaClient()
+import { getBoardByIdx } from "@/apis/boards/getBoard"
 
 export default async function handler(
     req: NextApiRequest,
@@ -22,13 +14,21 @@ export default async function handler(
     }
 
     try {
-        const payload = verify(token, process.env.JWT_SECRET!) as IJwtPayload
+        const { idx } = req.query
 
-        if (req.method === "DELETE") {
-            const boardIdx = parseInt(req.query.idx as string) // Ensure it's parsed as an integer
-            if (!boardIdx) {
-                return res.status(400).json({ message: "Invalid board ID" })
+        if (!idx || Array.isArray(idx)) {
+            return res.status(400).json({ message: "Invalid board ID" })
+        }
+
+        const boardIdx = parseInt(idx, 10)
+
+        if (req.method === "GET") {
+            const board = await getBoardByIdx(boardIdx)
+            if (!board) {
+                return res.status(404).json({ message: "Board not found" })
             }
+            return res.status(200).json(board)
+        } else if (req.method === "DELETE") {
             const deletedBoard = await deletePost(req, res, boardIdx)
             return res.status(200).json(deletedBoard)
         } else {
