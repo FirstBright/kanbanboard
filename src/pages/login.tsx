@@ -1,11 +1,17 @@
 import { useMutation } from "@tanstack/react-query"
 import axios from "axios"
 import { useRouter } from "next/router"
+import Link from "next/link"
+
+interface FormData {
+    nickname: string
+    password: string
+}
 
 export default function Login() {
     const router = useRouter()
     const loginMutation = useMutation({
-        mutationFn: async ({ nickname, password }: any) =>
+        mutationFn: async ({ nickname, password }: FormData) =>
             await axios.post("/api/login", {
                 nickname,
                 password,
@@ -15,7 +21,7 @@ export default function Login() {
         },
     })
 
-    const login = (e: any) => {
+    const login = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         loginMutation.mutate({
             nickname: e.currentTarget.nickname.value,
@@ -65,9 +71,9 @@ export default function Login() {
                     </a>
                 </div>
                 <div className='mt-4 text-center'>
-                    <a href='/signUp' className='text-blue-600'>
+                    <Link href='/signUp' className='text-blue-600'>
                         Sign up
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

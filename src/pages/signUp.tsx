@@ -1,26 +1,42 @@
-import { useMutation } from '@tanstack/react-query'
-import axios from 'axios'
-import { useRouter } from 'next/router'
-import toast from 'react-hot-toast'
+import { useMutation } from "@tanstack/react-query"
+import axios from "axios"
+import { useRouter } from "next/router"
+import toast from "react-hot-toast"
+import Link from "next/link"
+import { AxiosError } from "axios"
+
+interface FormData {
+    nickname: string
+    password: string
+    email: string
+}
+
+interface ErrorResponse {
+    message: string
+}
 
 export default function SignUp() {
     const router = useRouter()
     const signUpMutation = useMutation({
-        mutationFn: async ({ nickname, email, password }: any) =>
-            await axios.post('/api/signUp', {
+        mutationFn: async ({ nickname, email, password }: FormData) =>
+            await axios.post("/api/signUp", {
                 nickname,
                 email,
                 password,
             }),
         onSuccess: () => {
-            router.push('/login')
+            router.push("/login")
         },
-        onError: (error: any) => {
-            toast.error(error.response.data.message)
+        onError: (error: AxiosError<ErrorResponse>) => {
+            if (error.response && error.response.data) {
+                toast.error(error.response.data.message)
+            } else {
+                toast.error("An unexpected error occurred")
+            }
         },
     })
 
-    const signUp = (e: any) => {
+    const signUp = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         signUpMutation.mutate({
             nickname: e.currentTarget.nickname.value,
@@ -75,12 +91,12 @@ export default function SignUp() {
                     >
                         Sign Up
                     </button>
+                    <div className='mt-4 text-center'>
+                        <Link href='/login' className='text-blue-600'>
+                            Already have an account? Log In
+                        </Link>
+                    </div>
                 </form>
-                <div className='mt-4 text-center'>
-                    <a href='/login' className='text-blue-600'>
-                        Already have an account? Log In
-                    </a>
-                </div>
             </div>
         </div>
     )

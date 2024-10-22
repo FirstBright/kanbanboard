@@ -1,19 +1,20 @@
-import Button from '@/components/ui/Button'
-import Link from 'next/link'
-import { useQuery } from '@tanstack/react-query'
-import axios from 'axios'
-import { useState, useEffect } from 'react'
+import Button from "@/components/ui/Button"
+import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
+import axios from "axios"
+import { useState, useEffect } from "react"
+import Image from "next/image"
 
 export default function Home() {
     const { data, isLoading, isError } = useQuery({
-        queryKey: ['me'],
-        queryFn: async () => await axios.get('/api/me'),
+        queryKey: ["me"],
+        queryFn: async () => await axios.get("/api/me"),
     })
 
     const [isAuthenticated, setIsAuthenticated] = useState(false)
 
     useEffect(() => {
-        if (!isLoading && !isError && data?.data?.status !== 'fail') {
+        if (!isLoading && !isError && data?.data?.status !== "fail") {
             setIsAuthenticated(true)
         }
     }, [data, isLoading, isError])
@@ -30,18 +31,20 @@ export default function Home() {
                                 칸반보드를 이용한 Todo List
                             </p>
                         </div>
-                        <Link href={isAuthenticated ? '/boardPage' : '/login'}>
+                        <Link href={isAuthenticated ? "/boardPage" : "/login"}>
                             <Button
                                 text={
-                                    isAuthenticated ? '보드로 가기' : '시작하기'
+                                    isAuthenticated ? "보드로 가기" : "시작하기"
                                 }
                             />
                         </Link>
                     </div>
-                    <img
+                    <Image
                         src='/hero-image.png'
                         alt='not yet'
-                        className='rounded-xl max-sm:px-5 object-contain w-[300px] lg:w-auto'
+                        className='rounded-xl max-sm:px-5 object-contain lg:w-auto'
+                        width={500}
+                        height={300}
                     />
                 </div>
             </div>

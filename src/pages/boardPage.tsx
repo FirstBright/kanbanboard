@@ -9,6 +9,7 @@ import { parseCookies } from "nookies"
 import axios from "axios"
 import { verify } from "jsonwebtoken"
 import Link from "next/link"
+import { GetServerSidePropsContext } from "next"
 
 interface Board {
     idx: number
@@ -95,7 +96,7 @@ const BoardPage = ({
                     className='w-full text-center'
                 >
                     <h1 className='m-10 text-4xl font-bold uppercase'>
-                        Let's Give Your Board a Name
+                        Let&apos;s Give Your Board a Name
                     </h1>
                     <form
                         className='flex flex-col gap-10 items-center'
@@ -128,7 +129,10 @@ const BoardPage = ({
                                 className='bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center'
                             >
                                 <Link
-                                    href={`/myKanbanBoard?boardIdx=${board.idx}`}
+                                    href={{
+                                        pathname: `/myKanbanBoard`,
+                                        query: { boardIdx: board.idx },
+                                    }}
                                 >
                                     {board.name}
                                 </Link>
@@ -156,7 +160,9 @@ const BoardPage = ({
 }
 
 // Fetch boards from the API in getServerSideProps
-export const getServerSideProps = async (context: any) => {
+export const getServerSideProps = async (
+    context: GetServerSidePropsContext
+) => {
     const cookies = parseCookies(context)
     const token = cookies.token
 

@@ -165,49 +165,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
             fetchTasks(Number(boardIdx)) // Revert to original state if the API call fails
         }
     }
-    const moveTask = async (
-        taskIdx: number,
-        status: TaskStatus,
-        direction: "up" | "down"
-    ) => {
-        const statusTasks = tasks[status]
-        const taskIndex = statusTasks.findIndex((task) => task.idx === taskIdx)
-
-        if (
-            (direction === "up" && taskIndex === 0) ||
-            (direction === "down" && taskIndex === statusTasks.length - 1)
-        ) {
-            return // Task is already at the top/bottom
-        }
-
-        const newIndex = direction === "up" ? taskIndex - 1 : taskIndex + 1
-        const updatedTasks = [...statusTasks]
-        const [movedTask] = updatedTasks.splice(taskIndex, 1)
-        updatedTasks.splice(newIndex, 0, movedTask)
-
-        // Update locations
-        const updatedTasksWithLocations = updatedTasks.map((task, index) => ({
-            ...task,
-            location: index,
-        }))
-
-        setTasks((prevTasks) => ({
-            ...prevTasks,
-            [status]: updatedTasksWithLocations,
-        }))
-
-        try {
-            // Update locations for all tasks in the list
-            for (const task of updatedTasksWithLocations) {
-                await axios.put(`/api/tasks/${task.idx}`, {
-                    location: task.location,
-                })
-            }
-        } catch (error) {
-            console.error("Error updating task locations:", error)
-            fetchTasks(Number(boardIdx)) // Refetch tasks to ensure frontend state matches backend
-        }
-    }
+    
 
     const addTask = async () => {
         try {

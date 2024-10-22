@@ -1,8 +1,7 @@
 import { GetServerSideProps } from "next"
 import MyKanbanBoard from "@/pages/myKanbanBoard" // Adjust the import based on your file structure
-import axios from "axios"
 import { parseCookies } from "nookies"
-import { verify } from "jsonwebtoken"
+
 
 const BoardTasksPage = ({ boardIdx }: { boardIdx: number }) => {
     return <MyKanbanBoard boardIdx={boardIdx} />
