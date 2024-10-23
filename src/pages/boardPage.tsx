@@ -1,37 +1,55 @@
 import { useRouter } from "next/router"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { toast } from "react-hot-toast"
 import { motion } from "framer-motion"
 import Input from "@/components/ui/Input"
 import Button from "@/components/ui/Button"
 import { SyncLoader } from "react-spinners"
-import { parseCookies } from "nookies"
 import axios from "axios"
 import { verify } from "jsonwebtoken"
 import Link from "next/link"
-import { GetServerSidePropsContext } from "next"
+import { useQuery } from "@tanstack/react-query"
 
 interface Board {
     idx: number
     name: string
 }
 
-interface IJwtPayload {
-    idx: number
-}
-
-const BoardPage = ({
-    boards,
-    userIdx,
-}: {
-    boards: Board[]
-    userIdx: number
-}) => {
+const BoardPage = () => {
     const [loading, setLoading] = useState(false)
     const [boardName, setBoardName] = useState("")
-    const [boardList, setBoardList] = useState<Board[]>(boards)
+    const [boardList, setBoardList] = useState<Board[]>([])
     const [creatingBoard, setCreatingBoard] = useState(false)
     const router = useRouter()
+
+    const {
+        data: userData,
+        isLoading: userLoading,
+        isError: userError,
+    } = useQuery({
+        queryKey: ["me"],
+        queryFn: async () => await axios.get("/api/me"),
+    })
+    const {
+        data: boardsData,
+        isLoading: boardsLoading,
+        isError: boardsError,
+    } = useQuery({
+        queryKey: ["boards"],
+        queryFn: async () => await axios.get("/api/boards"),
+        enabled: !!userData, // Only fetch boards if user data is available
+    })
+    useEffect(() => {
+        if (boardsData) {
+            setBoardList(boardsData.data.boards)
+        }
+    }, [boardsData])
+
+    useEffect(() => {
+        if (userError || boardsError) {
+            router.push("/login")
+        }
+    }, [userError, boardsError, router])
 
     const handleCreateBoard = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -40,7 +58,7 @@ const BoardPage = ({
         try {
             const response = await axios.post("/api/boards", {
                 name: boardName,
-                userIdx,
+                userIdx: userData?.data?.idx,
             })
 
             toast.success(`Board "${boardName}" created!`)
@@ -82,6 +100,9 @@ const BoardPage = ({
         setBoardName("") // Reset the board name input
     }
 
+    if (userLoading || boardsLoading) {
+        return <div>Loading...</div>
+    }
     return (
         <motion.div
             initial='hidden'
@@ -89,7 +110,7 @@ const BoardPage = ({
             exit='exit'
             className='flex flex-col h-full items-center justify-center pt-[82px] w[90%] mx-auto max-w-[1450px] text-white'
         >
-            {creatingBoard || boards.length === 0 ? (
+            {creatingBoard || boardList.length === 0 ? (
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -157,47 +178,6 @@ const BoardPage = ({
             )}
         </motion.div>
     )
-}
-
-// Fetch boards from the API in getServerSideProps
-export const getServerSideProps = async (
-    context: GetServerSidePropsContext
-) => {
-    const cookies = parseCookies(context)
-    const token = cookies.token
-
-    if (!token) {
-        return {
-            redirect: {
-                destination: "/login",
-                permanent: false,
-            },
-        }
-    }
-
-    try {
-        const decoded = verify(token, process.env.JWT_SECRET!) as IJwtPayload
-
-        // Fetch boards from the API
-        const response = await axios.get(`http://localhost:3000/api/boards`, {
-            headers: { Cookie: `token=${token}` },
-        })
-
-        return {
-            props: {
-                boards: response.data.boards,
-                userIdx: decoded.idx,
-            },
-        }
-    } catch (error) {
-        console.error("Error fetching boards:", error)
-        return {
-            redirect: {
-                destination: "/login",
-                permanent: false,
-            },
-        }
-    }
 }
 
 export default BoardPage
