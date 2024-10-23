@@ -165,8 +165,6 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
             fetchTasks(Number(boardIdx)) // Revert to original state if the API call fails
         }
     }
-    
-
     const addTask = async () => {
         try {
             const newTask = {
@@ -233,6 +231,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
             console.error("Error updating task:", error)
         }
     }
+
     return (
         <div className='container mx-auto px-4 py-8'>
             <h1 className='text-2xl font-bold mb-4'>
@@ -252,9 +251,9 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                                 <div
                                     {...provided.droppableProps}
                                     ref={provided.innerRef}
-                                    className='w-1/5 p-4 bg-gray-100 rounded-lg text-black'
+                                    className='w-1/5 p-4 bg-gray-100 rounded-lg text-black relative pt-[60px]'
                                 >
-                                    <h2 className='font-bold text-lg mb-4'>
+                                    <h2 className='font-bold text-lg mb-4 absolute top-[16px]'>
                                         {status}
                                     </h2>
                                     {tasks[status].map(
