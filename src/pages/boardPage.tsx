@@ -51,6 +51,18 @@ const BoardPage = () => {
         }
     }, [userError, boardsError, router])
 
+    const logErrorToServer = async (error: unknown, context: string) => {
+        try {
+            await axios.post("/api/logs", {
+                message: (error instanceof Error) ? error.message : String(error),
+                context,
+                stack: (error instanceof Error) ? error.stack : null,
+            })
+        } catch (logError) {
+            console.error("Failed to log error to server:", logError)
+        }
+    }
+
     const handleCreateBoard = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
@@ -65,9 +77,9 @@ const BoardPage = () => {
             const newBoard = response.data
             setBoardList([...boardList, response.data])
             router.push(`/myKanbanBoard?boardIdx=${newBoard.idx}`)
-        } catch () {
+        } catch (error) {
+            await logErrorToServer(error, "Error creating board")
             toast.error("Error creating board")
-            //console.error("Error creating board:", error)
         } finally {
             setLoading(false)
         }
@@ -87,9 +99,9 @@ const BoardPage = () => {
             if (updatedBoardList.length === 0) {
                 setCreatingBoard(true)
             }
-        } catch () {
+        } catch (error) {
+            await logErrorToServer(error, "Error deleting board")
             toast.error("Error deleting board")
-            //console.error("Error deleting board:", error)
         } finally {
             setLoading(false)
         }
