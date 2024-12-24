@@ -1,6 +1,6 @@
 import { useRouter } from "next/router"
 import { useState, useEffect } from "react"
-import { toast } from "react-hot-toast"
+import { toast } from "react-toastify"
 import { motion } from "framer-motion"
 import Input from "@/components/ui/Input"
 import Button from "@/components/ui/Button"
@@ -8,6 +8,7 @@ import { SyncLoader } from "react-spinners"
 import axios from "axios"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
+import "react-toastify/dist/ReactToastify.css"
 
 interface Board {
     idx: number
@@ -66,7 +67,7 @@ const BoardPage = () => {
             router.push(`/myKanbanBoard?boardIdx=${newBoard.idx}`)
         } catch (error) {
             toast.error("Error creating board")
-            console.error("Error creating board:", error)
+            //console.error("Error creating board:", error)
         } finally {
             setLoading(false)
         }
@@ -88,7 +89,7 @@ const BoardPage = () => {
             }
         } catch (error) {
             toast.error("Error deleting board")
-            console.error("Error deleting board:", error)
+            //console.error("Error deleting board:", error)
         } finally {
             setLoading(false)
         }

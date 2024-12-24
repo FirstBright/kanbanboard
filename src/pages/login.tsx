@@ -2,6 +2,8 @@ import { useMutation } from "@tanstack/react-query"
 import axios from "axios"
 import { useRouter } from "next/router"
 import Link from "next/link"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 interface FormData {
     nickname: string
@@ -17,6 +19,7 @@ export default function Login() {
                 password,
             }),
         onSuccess: () => {
+            toast.success("Logged in!")
             router.push("/boardPage")
         },
     })

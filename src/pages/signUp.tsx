@@ -1,7 +1,8 @@
 import { useMutation } from "@tanstack/react-query"
 import axios from "axios"
 import { useRouter } from "next/router"
-import toast from "react-hot-toast"
+import { toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 import Link from "next/link"
 import { AxiosError } from "axios"
 
@@ -10,7 +11,6 @@ interface FormData {
     password: string
     email: string
 }
-
 interface ErrorResponse {
     message: string
 }
@@ -25,6 +25,7 @@ export default function SignUp() {
                 password,
             }),
         onSuccess: () => {
+            toast.success("Sign up successful! Please log in.")
             router.push("/login")
         },
         onError: (error: AxiosError<ErrorResponse>) => {
