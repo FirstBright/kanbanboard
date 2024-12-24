@@ -65,7 +65,7 @@ const BoardPage = () => {
             const newBoard = response.data
             setBoardList([...boardList, response.data])
             router.push(`/myKanbanBoard?boardIdx=${newBoard.idx}`)
-        } catch (error) {
+        } catch () {
             toast.error("Error creating board")
             //console.error("Error creating board:", error)
         } finally {
@@ -87,7 +87,7 @@ const BoardPage = () => {
             if (updatedBoardList.length === 0) {
                 setCreatingBoard(true)
             }
-        } catch (error) {
+        } catch () {
             toast.error("Error deleting board")
             //console.error("Error deleting board:", error)
         } finally {
