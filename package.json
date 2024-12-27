@@ -11,6 +11,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@hello-pangea/dnd": "^17.0.0",
     "@mui/material": "^6.3.0",
     "@prisma/client": "6.1.0",
     "@radix-ui/react-toast": "^1.2.4",
@@ -33,7 +34,6 @@
     "os-utils": "^0.0.14",
     "prisma": "^6.1.0",
     "react": "^19.0.0",
-    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^19.0.0",
     "react-redux": "^9.2.0",
     "react-spinners": "^0.15.0",
