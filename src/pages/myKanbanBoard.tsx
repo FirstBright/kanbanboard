@@ -103,6 +103,24 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
             setIsDeleteModalOpen(false)
         }
     }
+    const logErrorToServer = async (error: unknown, context: string) => {
+        try {
+            await axios.post("/api/logs", {
+                message: error instanceof Error ? error.message : String(error),
+                context,
+                stack: error instanceof Error ? error.stack : null,
+            })
+        } catch (logError) {
+            await axios.post("/api/logs", {
+                message:
+                    logError instanceof Error
+                        ? logError.message
+                        : String(logError),
+                context: "Logging Error",
+                stack: logError instanceof Error ? logError.stack : null,
+            })
+        }
+    }
 
     const fetchTasks = async (boardIdx: number) => {
         try {
@@ -125,7 +143,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
 
             setTasks(tasksByStatus)
         } catch (error) {
-            console.error("Error fetching tasks:", error)
+            await logErrorToServer(error, "Error fetching tasks")
         }
     }
     const onDragEnd = async (result: DropResult) => {
@@ -161,7 +179,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                 })
             }
         } catch (error) {
-            console.error("Error updating task:", error)
+            await logErrorToServer(error, "Error updating tasks")
             fetchTasks(Number(boardIdx)) // Revert to original state if the API call fails
         }
     }
@@ -183,7 +201,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                 TODO: [...prevTasks.TODO, createdTask],
             }))
         } catch (error) {
-            console.error("Error adding task:", error)
+            await logErrorToServer(error, "Error adding tasks")
         }
     }
 
@@ -198,7 +216,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                 ),
             }))
         } catch (error) {
-            console.error("Error deleting task:", error)
+            await logErrorToServer(error, "Error deleting tasks")
         }
     }
 
@@ -228,7 +246,7 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                 ),
             }))
         } catch (error) {
-            console.error("Error updating task:", error)
+            await logErrorToServer(error, "Error updating tasks")
         }
     }
 

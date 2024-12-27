@@ -54,12 +54,19 @@ const BoardPage = () => {
     const logErrorToServer = async (error: unknown, context: string) => {
         try {
             await axios.post("/api/logs", {
-                message: (error instanceof Error) ? error.message : String(error),
+                message: error instanceof Error ? error.message : String(error),
                 context,
-                stack: (error instanceof Error) ? error.stack : null,
+                stack: error instanceof Error ? error.stack : null,
             })
         } catch (logError) {
-            console.error("Failed to log error to server:", logError)
+            await axios.post("/api/logs", {
+                message:
+                    logError instanceof Error
+                        ? logError.message
+                        : String(logError),
+                context: "Logging Error",
+                stack: logError instanceof Error ? logError.stack : null,
+            })
         }
     }
 
