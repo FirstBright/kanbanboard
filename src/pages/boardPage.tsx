@@ -6,7 +6,6 @@ import Input from "@/components/ui/Input"
 import Button from "@/components/ui/Button"
 import { SyncLoader } from "react-spinners"
 import axios from "axios"
-import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import "react-toastify/dist/ReactToastify.css"
 
