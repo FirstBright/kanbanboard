@@ -333,7 +333,13 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                     type='text'
                     value={editedContents}
                     onChange={(e) => setEditedContents(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            handleEditTask()
+                        }
+                    }}
                     className='w-full p-2 mb-4 border rounded'
+                    autoFocus
                 />
                 <div className='flex justify-end'>
                     <button
