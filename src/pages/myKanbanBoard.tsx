@@ -287,6 +287,9 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                                                         {...provided.dragHandleProps}
                                                         ref={provided.innerRef}
                                                         className='p-4 mb-3 bg-white rounded-lg shadow-lg'
+                                                        onClick={() =>
+                                                            openEditModal(task)
+                                                        }
                                                     >
                                                         <div className='flex justify-between items-center'>
                                                             <span>
@@ -294,24 +297,17 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                                                             </span>
                                                             <div>
                                                                 <button
-                                                                    onClick={() =>
-                                                                        openEditModal(
-                                                                            task
-                                                                        )
-                                                                    }
-                                                                    className='mr-2 text-blue-500 hover:text-blue-700'
-                                                                >
-                                                                    Edit
-                                                                </button>
-                                                                <button
-                                                                    onClick={() =>
+                                                                    onClick={(
+                                                                        e
+                                                                    ) => {
+                                                                        e.stopPropagation()
                                                                         openDeleteModal(
                                                                             task
                                                                         )
-                                                                    }
+                                                                    }}
                                                                     className='text-red-500 hover:text-red-700'
                                                                 >
-                                                                    Delete
+                                                                    ❌
                                                                 </button>
                                                             </div>
                                                         </div>

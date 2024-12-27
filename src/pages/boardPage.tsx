@@ -166,19 +166,20 @@ const BoardPage = () => {
                         {boardList.map((board) => (
                             <div
                                 key={board.idx}
-                                className='bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center'
-                            >
-                                <Link
-                                    href={{
+                                className='bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center cursor-pointer'
+                                onClick={() => {
+                                    router.push({
                                         pathname: `/myKanbanBoard`,
                                         query: { boardIdx: board.idx },
-                                    }}
-                                >
-                                    {board.name}
-                                </Link>
-
+                                    })
+                                }}
+                            >
+                                <span>{board.name}</span>
                                 <button
-                                    onClick={() => handleDeleteBoard(board.idx)}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        handleDeleteBoard(board.idx)
+                                    }}
                                     className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300'
                                     disabled={loading}
                                 >
