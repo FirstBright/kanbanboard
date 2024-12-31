@@ -262,14 +262,14 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
                 Add Task
             </button>
             <DragDropContext onDragEnd={onDragEnd}>
-                <div className='flex space-x-4'>
+                <div className='flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0'>
                     {(Object.keys(tasks) as TaskStatus[]).map((status) => (
                         <Droppable droppableId={status} key={status}>
                             {(provided) => (
                                 <div
                                     {...provided.droppableProps}
                                     ref={provided.innerRef}
-                                    className='w-1/5 p-4 bg-gray-100 rounded-lg text-black relative pt-[60px]'
+                                    className='flex-1 p-4 bg-gray-100 rounded-lg text-black relative pt-[60px]'
                                 >
                                     <h2 className='font-bold text-lg mb-4 absolute top-[16px]'>
                                         {status}
