@@ -119,14 +119,14 @@ const BoardPage = () => {
     }
 
     if (userLoading || boardsLoading) {
-        return <div>Loading...</div>
+        return <div className='flex h-full items-center justify-center w[90%] mx-auto max-w-[1450px] text-white'>Loading...</div>
     }
     return (
         <motion.div
             initial='hidden'
             animate='visible'
             exit='exit'
-            className='flex flex-col h-full items-center justify-center pt-[82px] px-20 w[90%] mx-auto max-w-[1450px] text-white'
+            className='flex flex-col h-full items-center justify-center w[90%] mx-auto max-w-[1450px] text-white'
         >
             {creatingBoard || boardList.length === 0 ? (
                 <motion.div
