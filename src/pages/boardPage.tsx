@@ -126,7 +126,7 @@ const BoardPage = () => {
             initial='hidden'
             animate='visible'
             exit='exit'
-            className='flex flex-col h-full items-center justify-center w[90%] mx-auto max-w-[1450px] text-white'
+            className='flex flex-col h-full items-center justify-center w[90%] mx-auto max-w-[1450px] text-white pt-20 md:pt-0'
         >
             {creatingBoard || boardList.length === 0 ? (
                 <motion.div

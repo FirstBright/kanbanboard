@@ -20,7 +20,7 @@ export default function Home() {
     }, [data, isLoading, isError])
     return (
         <>
-            <div className='flex h-full items-center relative justify-center gap-20 w-[90%] mx-auto max-w-[1450px]'>
+            <div className='flex h-full items-center relative justify-center gap-20 w-[90%] mx-auto max-w-[1450px] pt-20 md:pt-0'>
                 <div className='flex items-center gap-6 w-full justify-between flex-col md:flex-row'>
                     <div className='flex flex-col justify-center max-md:items-center space-y-4 max-md:test-center'>
                         <div className='space-y-2'>
