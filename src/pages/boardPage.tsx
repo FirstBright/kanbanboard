@@ -1,3 +1,4 @@
+import Head from "next/head"
 import { useRouter } from "next/router"
 import { useState, useEffect } from "react"
 import { toast } from "react-toastify"
@@ -119,83 +120,93 @@ const BoardPage = () => {
     }
 
     if (userLoading || boardsLoading) {
-        return <div className='flex h-full items-center justify-center w[90%] mx-auto max-w-[1450px] text-white'>Loading...</div>
+        return (
+            <div className='flex h-full items-center justify-center w[90%] mx-auto max-w-[1450px] text-white'>
+                Loading...
+            </div>
+        )
     }
     return (
-        <motion.div
-            initial='hidden'
-            animate='visible'
-            exit='exit'
-            className='flex flex-col h-full items-center justify-center px-20 w[90%] mx-auto max-w-[1450px] text-white pt-20 md:pt-0'
-        >
-            {creatingBoard || boardList.length === 0 ? (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className='w-full text-center'
-                >
-                    <h1 className='m-10 text-4xl font-bold uppercase'>
-                        Let&apos;s Give Your Board a Name
-                    </h1>
-                    <form
-                        className='flex flex-col gap-10 items-center'
-                        onSubmit={handleCreateBoard}
+        <>
+            <Head>
+                <title>Boards</title>
+                <meta name='description' content='Boards list you have' />
+            </Head>
+            <motion.div
+                initial='hidden'
+                animate='visible'
+                exit='exit'
+                className='flex flex-col h-full items-center justify-center px-20 w[90%] mx-auto max-w-[1450px] text-white pt-20 md:pt-0'
+            >
+                {creatingBoard || boardList.length === 0 ? (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className='w-full text-center'
                     >
-                        <Input
-                            type='text'
-                            name='name'
-                            placeholder='My Board Name ...'
-                            value={boardName}
-                            onChange={(e) => setBoardName(e.target.value)}
-                            disabled={loading}
-                        />
-                        <Button text='Continue' type='submit' />
-                        {loading && (
-                            <div className='flex gap-3 items-center text-white'>
-                                <SyncLoader color='#fff' />
-                                <span>Getting Your Board Ready</span>
-                            </div>
-                        )}
-                    </form>
-                </motion.div>
-            ) : (
-                <div className='w-full'>
-                    <h1 className='text-4xl font-bold mb-8'>Your Boards</h1>
-                    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                        {boardList.map((board) => (
-                            <div
-                                key={board.idx}
-                                className='bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center cursor-pointer'
-                                onClick={() => {
-                                    router.push({
-                                        pathname: `/myKanbanBoard`,
-                                        query: { boardIdx: board.idx },
-                                    })
-                                }}
-                            >
-                                <span>{board.name}</span>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleDeleteBoard(board.idx)
+                        <h1 className='m-10 text-4xl font-bold uppercase'>
+                            Let&apos;s Give Your Board a Name
+                        </h1>
+                        <form
+                            className='flex flex-col gap-10 items-center'
+                            onSubmit={handleCreateBoard}
+                        >
+                            <Input
+                                type='text'
+                                name='name'
+                                placeholder='My Board Name ...'
+                                value={boardName}
+                                onChange={(e) => setBoardName(e.target.value)}
+                                disabled={loading}
+                            />
+                            <Button text='Continue' type='submit' />
+                            {loading && (
+                                <div className='flex gap-3 items-center text-white'>
+                                    <SyncLoader color='#fff' />
+                                    <span>Getting Your Board Ready</span>
+                                </div>
+                            )}
+                        </form>
+                    </motion.div>
+                ) : (
+                    <div className='w-full'>
+                        <h1 className='text-4xl font-bold mb-8'>Your Boards</h1>
+                        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                            {boardList.map((board) => (
+                                <div
+                                    key={board.idx}
+                                    className='bg-gray-800 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center cursor-pointer'
+                                    onClick={() => {
+                                        router.push({
+                                            pathname: `/myKanbanBoard`,
+                                            query: { boardIdx: board.idx },
+                                        })
                                     }}
-                                    className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300'
-                                    disabled={loading}
                                 >
-                                    X
-                                </button>
-                            </div>
-                        ))}
+                                    <span>{board.name}</span>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleDeleteBoard(board.idx)
+                                        }}
+                                        className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition-colors duration-300'
+                                        disabled={loading}
+                                    >
+                                        X
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        <div className='flex flex-col gap-10 mt-40 items-center'>
+                            <Button
+                                text='Create New Board'
+                                onClick={handleCreateNewBoard}
+                            />
+                        </div>
                     </div>
-                    <div className='flex flex-col gap-10 mt-40 items-center'>
-                        <Button
-                            text='Create New Board'
-                            onClick={handleCreateNewBoard}
-                        />
-                    </div>
-                </div>
-            )}
-        </motion.div>
+                )}
+            </motion.div>
+        </>
     )
 }
 

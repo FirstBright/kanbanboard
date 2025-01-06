@@ -1,3 +1,4 @@
+import Head from "next/head"
 import React, { useState, useEffect } from "react"
 import { useRouter } from "next/router"
 import {
@@ -251,134 +252,153 @@ const MyKanbanBoard: React.FC<MyKanbanBoardProps> = () => {
     }
 
     return (
-        <div className='container mx-auto px-4 py-8'>
-            <h1 className='text-2xl font-bold mb-4'>
-                {board ? board.name : "Loading..."}
-            </h1>
-            <button
-                onClick={addTask}
-                className='mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
-            >
-                Add Task
-            </button>
-            <DragDropContext onDragEnd={onDragEnd}>
-                <div className='flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0'>
-                    {(Object.keys(tasks) as TaskStatus[]).map((status) => (
-                        <Droppable droppableId={status} key={status}>
-                            {(provided) => (
-                                <div
-                                    {...provided.droppableProps}
-                                    ref={provided.innerRef}
-                                    className='flex-1 p-4 bg-gray-100 rounded-lg text-black relative pt-[60px]'
-                                >
-                                    <h2 className='font-bold text-lg mb-4 absolute top-[16px]'>
-                                        {status}
-                                    </h2>
-                                    {tasks[status].map(
-                                        (task: Task, index: number) => (
-                                            <Draggable
-                                                key={task.idx}
-                                                draggableId={task.idx.toString()}
-                                                index={index}
-                                            >
-                                                {(provided) => (
-                                                    <div
-                                                        {...provided.draggableProps}
-                                                        {...provided.dragHandleProps}
-                                                        ref={provided.innerRef}
-                                                        className='p-4 mb-3 bg-white rounded-lg shadow-lg'
-                                                        onClick={() =>
-                                                            openEditModal(task)
-                                                        }
-                                                    >
-                                                        <div className='flex justify-between items-center'>
-                                                            <span>
-                                                                {task.contents}
-                                                            </span>
-                                                            <div>
-                                                                <button
-                                                                    onClick={(
-                                                                        e
-                                                                    ) => {
-                                                                        e.stopPropagation()
-                                                                        openDeleteModal(
-                                                                            task
-                                                                        )
-                                                                    }}
-                                                                    className='text-red-500 hover:text-red-700'
-                                                                >
-                                                                    ❌
-                                                                </button>
+        <>
+            <Head>
+                <title>{board ? board.name : "Loading..."}</title>
+                <meta
+                    name='description'
+                    content='Personal Kanban board for task management'
+                />
+                <meta
+                    name='viewport'
+                    content='width=device-width, initial-scale=1'
+                />
+            </Head>
+            <div className='container mx-auto px-4 py-8'>
+                <h1 className='text-2xl font-bold mb-4'>
+                    {board ? board.name : "Loading..."}
+                </h1>
+                <button
+                    onClick={addTask}
+                    className='mb-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'
+                >
+                    Add Task
+                </button>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <div className='flex flex-col md:flex-row md:space-x-4 space-y-4 md:space-y-0'>
+                        {(Object.keys(tasks) as TaskStatus[]).map((status) => (
+                            <Droppable droppableId={status} key={status}>
+                                {(provided) => (
+                                    <div
+                                        {...provided.droppableProps}
+                                        ref={provided.innerRef}
+                                        className='flex-1 p-4 bg-gray-100 rounded-lg text-black relative pt-[60px]'
+                                    >
+                                        <h2 className='font-bold text-lg mb-4 absolute top-[16px]'>
+                                            {status}
+                                        </h2>
+                                        {tasks[status].map(
+                                            (task: Task, index: number) => (
+                                                <Draggable
+                                                    key={task.idx}
+                                                    draggableId={task.idx.toString()}
+                                                    index={index}
+                                                >
+                                                    {(provided) => (
+                                                        <div
+                                                            {...provided.draggableProps}
+                                                            {...provided.dragHandleProps}
+                                                            ref={
+                                                                provided.innerRef
+                                                            }
+                                                            className='p-4 mb-3 bg-white rounded-lg shadow-lg'
+                                                            onClick={() =>
+                                                                openEditModal(
+                                                                    task
+                                                                )
+                                                            }
+                                                        >
+                                                            <div className='flex justify-between items-center'>
+                                                                <span>
+                                                                    {
+                                                                        task.contents
+                                                                    }
+                                                                </span>
+                                                                <div>
+                                                                    <button
+                                                                        onClick={(
+                                                                            e
+                                                                        ) => {
+                                                                            e.stopPropagation()
+                                                                            openDeleteModal(
+                                                                                task
+                                                                            )
+                                                                        }}
+                                                                        className='text-red-500 hover:text-red-700'
+                                                                    >
+                                                                        ❌
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                            </Draggable>
-                                        )
-                                    )}
-                                    {provided.placeholder}
-                                </div>
-                            )}
-                        </Droppable>
-                    ))}
-                </div>
-            </DragDropContext>
+                                                    )}
+                                                </Draggable>
+                                            )
+                                        )}
+                                        {provided.placeholder}
+                                    </div>
+                                )}
+                            </Droppable>
+                        ))}
+                    </div>
+                </DragDropContext>
 
-            <Modal
-                isOpen={isEditModalOpen}
-                onClose={() => setIsEditModalOpen(false)}
-            >
-                <h2 className='text-2xl font-bold mb-4'>Edit Task</h2>
-                <input
-                    type='text'
-                    value={editedContents}
-                    onChange={(e) => setEditedContents(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            handleEditTask()
-                        }
-                    }}
-                    className='w-full p-2 mb-4 border rounded'
-                    autoFocus
-                />
-                <div className='flex justify-end'>
-                    <button
-                        onClick={() => setIsEditModalOpen(false)}
-                        className='mr-2 px-4 py-2 bg-gray-300 rounded'
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleEditTask}
-                        className='px-4 py-2 bg-blue-500 text-white rounded'
-                    >
-                        Save
-                    </button>
-                </div>
-            </Modal>
+                <Modal
+                    isOpen={isEditModalOpen}
+                    onClose={() => setIsEditModalOpen(false)}
+                >
+                    <h2 className='text-2xl font-bold mb-4'>Edit Task</h2>
+                    <input
+                        type='text'
+                        value={editedContents}
+                        onChange={(e) => setEditedContents(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleEditTask()
+                            }
+                        }}
+                        className='w-full p-2 mb-4 border rounded'
+                        autoFocus
+                    />
+                    <div className='flex justify-end'>
+                        <button
+                            onClick={() => setIsEditModalOpen(false)}
+                            className='mr-2 px-4 py-2 bg-gray-300 rounded'
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleEditTask}
+                            className='px-4 py-2 bg-blue-500 text-white rounded'
+                        >
+                            Save
+                        </button>
+                    </div>
+                </Modal>
 
-            <Modal
-                isOpen={isDeleteModalOpen}
-                onClose={() => setIsDeleteModalOpen(false)}
-            >
-                <h2 className='text-2xl font-bold mb-4'>Delete Task</h2>
-                <p>Are you sure you want to delete this task?</p>
-                <div className='flex justify-end mt-4'>
-                    <button
-                        onClick={() => setIsDeleteModalOpen(false)}
-                        className='mr-2 px-4 py-2 bg-gray-300 rounded'
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleDeleteTask}
-                        className='px-4 py-2 bg-red-500 text-white rounded'
-                    >
-                        Delete
-                    </button>
-                </div>
-            </Modal>
-        </div>
+                <Modal
+                    isOpen={isDeleteModalOpen}
+                    onClose={() => setIsDeleteModalOpen(false)}
+                >
+                    <h2 className='text-2xl font-bold mb-4'>Delete Task</h2>
+                    <p>Are you sure you want to delete this task?</p>
+                    <div className='flex justify-end mt-4'>
+                        <button
+                            onClick={() => setIsDeleteModalOpen(false)}
+                            className='mr-2 px-4 py-2 bg-gray-300 rounded'
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleDeleteTask}
+                            className='px-4 py-2 bg-red-500 text-white rounded'
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </Modal>
+            </div>
+        </>
     )
 }
 
